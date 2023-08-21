@@ -1,0 +1,33 @@
+
+City Streets Checkerboard is Checkerboard like city terrain and roads system 
+for urban environment projects. 
+
+Package contains 39 connectable square terrain pieces. 
+
+Prefab scene presents all 39 available pieces stacked in groups 
+that connect to each other in most logical manner. 
+Align pieces by the corner (with V key) and rotate by 90 (or 180 or 270) 
+degrees if needed as they rotate around the center. 
+Demo scene present all the prefabs mentioned above 
+plus an example of a small area of a closed city terrain composed of them. 
+Not every piece connects to the rest but if you follow a simple rule 
+of starting with a type of road you want lets say a two lane 
+than you connect two lane crossing and continue accordingly. 
+This system is designed to help you create reasonably complex road system for your 
+city environment ad logically close every road network you started. 
+When compiling city structure perhaps it is reasonable to start with more compact 
+network in traditional center (one lane + two lane roads) and construct 
+highways in surroundings, for a metropolis like center use four lane cross-road segments. 
+Demo scene provides you with the combinations above. 
+This package does not contain any automated system for terrain construction. 
+It is purely and simply - duplicate - move - align - rotate. 
+However each square dimensions are 30 by 30 meters so you will be able to assemble quite a vast area rather quickly.
+
+
+Feel free to contact us for support:
+zeman@moodware.cz
+J.zeman27@gmail
+
+web:
+www.moodware.cz
+www.moodware.eu

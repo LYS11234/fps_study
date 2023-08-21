@@ -1,0 +1,2 @@
+relpace textures Assets MOOD WARE\_MW_Terrain 01\MAPS\
+with textures from desired folder.
