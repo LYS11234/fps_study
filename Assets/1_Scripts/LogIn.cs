@@ -9,18 +9,16 @@ using UnityEngine.SceneManagement;
 public class LogIn : MonoBehaviourPunCallbacks
 {
     InputFields text;
-    public string Lobby;
-    ManagerLobby managerLobby;
     void Start()
     {
-        text = GetComponent<InputFields>();
-        managerLobby = GetComponent<ManagerLobby>();
+        text = FindObjectOfType<InputFields>();
     }
 
     // Update is called once per frame
-    private void Login()
+    public void Login()
     {
         PhotonNetwork.NickName = text.name;
         SceneManager.LoadScene("SampleScene");
+        Debug.Log("A");
     }
 }
