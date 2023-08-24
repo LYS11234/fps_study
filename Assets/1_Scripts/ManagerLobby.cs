@@ -7,15 +7,22 @@ using Newtonsoft.Json;
 
 public class ManagerLobby : MonoBehaviourPunCallbacks
 {
+    InputFields text;
+    PlayerController playerController;
+    
+
     private void Awake()
     {
-        PhotonNetwork.NickName = UnityEngine.Random.Range(1000, 9999).ToString();
+        playerController = GetComponent<PlayerController>();
+        text = GetComponent<InputFields>();
         PhotonNetwork.ConnectUsingSettings();
     }
 
     public void OnRoomCreate()
     {
+        
         PhotonNetwork.CreateRoom("abc");
+        
     }
 
     public void OnRoomJoin()
@@ -45,7 +52,9 @@ public class ManagerLobby : MonoBehaviourPunCallbacks
     public override void OnCreatedRoom()
     {
         base.OnCreatedRoom();
+        playerController.name = text.name;
         Debug.Log("OnCreatedRoom");
+        Debug.Log(PhotonNetwork.NickName);
     }
 
     public override void OnJoinedLobby()
@@ -78,8 +87,9 @@ public class ManagerLobby : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         base.OnJoinedRoom();
-        Debug.Log("OnJoinedRoom");
-
+        playerController.name = text.name;
+        Debug.Log("OnJoinedRoom" + PhotonNetwork.NickName);
+        
         PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity);
     }
 
