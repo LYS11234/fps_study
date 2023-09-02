@@ -9,7 +9,6 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
     PhotonView view;
     Rigidbody myRigid;
     public int applySpeed = 5;
-    public string name;
 
     Vector3 realPos;
     Quaternion realRot;

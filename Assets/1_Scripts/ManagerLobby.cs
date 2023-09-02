@@ -7,21 +7,23 @@ using Newtonsoft.Json;
 
 public class ManagerLobby : MonoBehaviourPunCallbacks
 {
-    InputFields text;
+    //InputFields text;
     PlayerController playerController;
-    
+    public GameObject roomPrefab;
+    public Transform roomListParent;
 
     private void Awake()
     {
         playerController = GetComponent<PlayerController>();
-        text = GetComponent<InputFields>();
         PhotonNetwork.ConnectUsingSettings();
     }
 
     public void OnRoomCreate()
     {
-        
-        PhotonNetwork.CreateRoom("abc");
+        RoomOptions roomOptions = new RoomOptions();
+        ExitGames.Client.Photon.Hashtable initialProps = new ExitGames.Client.Photon.Hashtable() { { "isReady", false }, { "passworld", "" } };
+        roomOptions.CustomRoomProperties =  initialProps;
+        PhotonNetwork.CreateRoom("abc", roomOptions);
         
     }
 
@@ -52,7 +54,7 @@ public class ManagerLobby : MonoBehaviourPunCallbacks
     public override void OnCreatedRoom()
     {
         base.OnCreatedRoom();
-        playerController.name = text.name;
+        //playerController.name = text.name;
         Debug.Log("OnCreatedRoom");
         Debug.Log(PhotonNetwork.NickName);
     }
@@ -80,6 +82,13 @@ public class ManagerLobby : MonoBehaviourPunCallbacks
     {
         base.OnRoomListUpdate(roomList);
         Debug.Log("OnRoomListUpdate" + JsonConvert.SerializeObject(roomList));
+
+        for (int i = 0; i < roomList.Count; i++)
+        {
+            GameObject go = Instantiate(roomPrefab, roomListParent);
+            PrefabRoom room = go.GetComponent<PrefabRoom>();
+            room.SetRoomInfo(roomList[i]);
+        }
         //Debug.Log("OnRoomListUpdate" + JsonConvert.SerializeObject(roomList));
         //  List<RoomInfo> a = JsonConvert.DeserializeObject<List<RoomInfo>>("");
     }
@@ -87,7 +96,7 @@ public class ManagerLobby : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         base.OnJoinedRoom();
-        playerController.name = text.name;
+        //playerController.name = text.name;
         Debug.Log("OnJoinedRoom" + PhotonNetwork.NickName);
         
         PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity);
