@@ -37,10 +37,16 @@ public class RoomManager : MonoBehaviourPunCallbacks
     private Image selectedMapImage;
 
     [SerializeField]
+    private GameObject ReadyPopUp;
+
+    [SerializeField]
     private GameObject mapLists;
 
     [SerializeField]
     private PrefabMap prefabMapScript;
+
+    [SerializeField]
+    private PrefabPlayer prefabPlayer;
 
     [SerializeField]
     private string selectedMap;
@@ -49,8 +55,10 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     Dictionary<Player, GameObject> playerPrefabDic = new Dictionary<Player, GameObject>();
 
-    public Button startBtn;
+    public GameObject startBtnObj;
+    public GameObject readyBtnObj;
     public Button mapSelectBtn;
+
 
     private void Awake()
     {
@@ -72,47 +80,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
     }
 
 
-    void CreatePlayerList()
-    {
-        //ExitGames.Client.Photon.Hashtable initialProps = new ExitGames.Client.Photon.Hashtable() { { } };//저기서 팀 분류된걸로 구분하는거 아냐?
-        //PhotonNetwork.SetPlayerCustomProperties//용법이 어딨더라
-
-        // 다른 유저들의 팀을 설정해준다.
-        {
-            for (int i = 0; i < PhotonNetwork.PlayerListOthers.Length; i++)
-            {
-                ExitGames.Client.Photon.Hashtable initialProps = PhotonNetwork.PlayerListOthers[i].CustomProperties;
-                if(initialProps.ContainsKey("Team"))
-                {
-                    if (initialProps["Team"].ToString() == "1")
-                    {
-                        
-                        CreatePlayer(PhotonNetwork.PlayerListOthers[i], playerPerhaps_1, playerListParent_1, team1List);
-                    }
-                    else if (initialProps["Team"].ToString() == "2")
-                    {
-                        CreatePlayer(PhotonNetwork.PlayerListOthers[i], playerPerhaps_2, playerListParent_2, team2List);
-                    }
-                }
-            }
-        }
-
-        // 내 팀을 설정해준다.
-        if (team1List.Count <= team2List.Count)
-        {
-            ExitGames.Client.Photon.Hashtable initialProps = PhotonNetwork.LocalPlayer.CustomProperties;
-            initialProps.TryAdd("Team", "1");
-            PhotonNetwork.LocalPlayer.SetCustomProperties(initialProps);
-            CreatePlayer(PhotonNetwork.LocalPlayer, playerPerhaps_1, playerListParent_1, team1List);
-        }
-        else
-        {
-            ExitGames.Client.Photon.Hashtable initialProps = PhotonNetwork.LocalPlayer.CustomProperties;
-            initialProps.TryAdd("Team", "2");
-            PhotonNetwork.LocalPlayer.SetCustomProperties(initialProps);
-            CreatePlayer(PhotonNetwork.LocalPlayer, playerPerhaps_2, playerListParent_2, team2List);
-        }
-    }
+    
 
     //public override void OnPlayerEnteredRoom(Player newPlayer)
     //{
@@ -128,27 +96,8 @@ public class RoomManager : MonoBehaviourPunCallbacks
     //    }
     //}
 
-    private void CreatePlayer(Player newPlayer, GameObject playerPerhaps, Transform playerParent, List<Player> list)
-    {
-        DeletePlayer(newPlayer);
-        GameObject go = Instantiate(playerPerhaps, playerParent);
-        PrefabPlayer player = go.GetComponent<PrefabPlayer>();
-        string playername = newPlayer.NickName;
-        list.Add(newPlayer);
-        player.SetText(playername);
 
-        playerPrefabDic.Add(newPlayer, go);
-    }
-
-    private void DeletePlayer(Player newPlayer)//나중에 teamlist에서 삭제까지 추가할 것
-    {
-        if(playerPrefabDic.ContainsKey(newPlayer))
-        {
-            Destroy(playerPrefabDic[newPlayer]);
-            playerPrefabDic.Remove(newPlayer);
-        }
-    }
-
+    #region Photon
     public override void OnCreatedRoom()
     {
         base.OnCreatedRoom();
@@ -223,14 +172,17 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
             }
         }
-    }
 
-    public void ChangeTeam(string _team)
-    {
-        Hashtable cp = PhotonNetwork.LocalPlayer.CustomProperties;
-        cp["Team"] = _team;
-        PhotonNetwork.LocalPlayer.SetCustomProperties(cp);
-        
+        string rd = changedProps["Ready"].ToString();
+
+        if (rd == "true") 
+        {
+            prefabPlayer.readyText.text = "Ready!";
+        }
+        else
+        {
+            prefabPlayer.readyText.text = "";
+        }
     }
 
     //public void ChangeTeam2Red()
@@ -252,6 +204,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
         base.OnPlayerLeftRoom(otherPlayer);
+        DeletePlayer(otherPlayer);
     }
 
     //public override void OnPlayer
@@ -266,26 +219,12 @@ public class RoomManager : MonoBehaviourPunCallbacks
         if (!PhotonNetwork.IsMasterClient)
         {
             mapSelectBtn.interactable = false;
-            startBtn.interactable = false;
+            startBtnObj.SetActive(false);
+            readyBtnObj.SetActive(true);
         }
 
         //PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity);
 
-    }
-    public void ShowMaps()
-    {
-        mapLists.gameObject.SetActive(true);
-    }
-
-    public void SelectMap(PrefabMap prefabmap)
-    {
-        selectedMap = prefabmap.name;
-        selectedMapImage.sprite = prefabmap.Image;
-        mapLists.gameObject.SetActive(false);
-        Hashtable cp = PhotonNetwork.CurrentRoom.CustomProperties;
-        cp["MapName"] = selectedMap;
-        PhotonNetwork.CurrentRoom.SetCustomProperties(cp);
-        
     }
 
     public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
@@ -301,10 +240,85 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     }
 
+    public override void OnMasterClientSwitched(Player newMasterClient)
+    {
+        base.OnMasterClientSwitched(newMasterClient);
+
+        if(PhotonNetwork.IsMasterClient)
+        {
+            readyBtnObj.gameObject.SetActive(false);
+            startBtnObj.gameObject.SetActive(true);
+            mapSelectBtn.interactable = true;
+        }
+    }
+    #endregion
+
+    #region Codes
+    void CreatePlayerList()
+    {
+        //ExitGames.Client.Photon.Hashtable initialProps = new ExitGames.Client.Photon.Hashtable() { { } };//저기서 팀 분류된걸로 구분하는거 아냐?
+        //PhotonNetwork.SetPlayerCustomProperties//용법이 어딨더라
+
+        // 다른 유저들의 팀을 설정해준다.
+        {
+            for (int i = 0; i < PhotonNetwork.PlayerListOthers.Length; i++)
+            {
+                ExitGames.Client.Photon.Hashtable initialProps = PhotonNetwork.PlayerListOthers[i].CustomProperties;
+                if (initialProps.ContainsKey("Team"))
+                {
+                    if (initialProps["Team"].ToString() == "1")
+                    {
+
+                        CreatePlayer(PhotonNetwork.PlayerListOthers[i], playerPerhaps_1, playerListParent_1, team1List);
+                    }
+                    else if (initialProps["Team"].ToString() == "2")
+                    {
+                        CreatePlayer(PhotonNetwork.PlayerListOthers[i], playerPerhaps_2, playerListParent_2, team2List);
+                    }
+                }
+            }
+        }
+
+        // 내 팀을 설정해준다.
+        if (team1List.Count <= team2List.Count)
+        {
+            ExitGames.Client.Photon.Hashtable initialProps = PhotonNetwork.LocalPlayer.CustomProperties;
+            initialProps.TryAdd("Team", "1");
+            initialProps.TryAdd("Ready", "false");
+            PhotonNetwork.LocalPlayer.SetCustomProperties(initialProps);
+            CreatePlayer(PhotonNetwork.LocalPlayer, playerPerhaps_1, playerListParent_1, team1List);
+        }
+        else
+        {
+            ExitGames.Client.Photon.Hashtable initialProps = PhotonNetwork.LocalPlayer.CustomProperties;
+            initialProps.TryAdd("Team", "2");
+            initialProps.TryAdd("Ready", "false");
+            PhotonNetwork.LocalPlayer.SetCustomProperties(initialProps);
+            CreatePlayer(PhotonNetwork.LocalPlayer, playerPerhaps_2, playerListParent_2, team2List);
+        }
+    }
+
+
     [PunRPC]
     public void ChangeScene(string _Scene)
     {
         PhotonNetwork.LoadLevel(_Scene);
+    }
+
+    public void SelectMap(PrefabMap prefabmap)
+    {
+        selectedMap = prefabmap.name;
+        selectedMapImage.sprite = prefabmap.Image;
+        mapLists.gameObject.SetActive(false);
+        Hashtable cp = PhotonNetwork.CurrentRoom.CustomProperties;
+        cp["MapName"] = selectedMap;
+        PhotonNetwork.CurrentRoom.SetCustomProperties(cp);
+
+    }
+
+    public void ShowMaps()
+    {
+        mapLists.gameObject.SetActive(true);
     }
 
     private void ShowMapPre()
@@ -316,6 +330,74 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     public void StartBtn()
     {
+        for(int i = 1; i < PhotonNetwork.PlayerList.Length; i++)
+        {
+            if (PhotonNetwork.PlayerList[i].CustomProperties["Ready"].ToString() != "true")
+            { 
+                ReadyPopUp.gameObject.SetActive(true);
+                return; 
+            }
+        }
         view.RPC("ChangeScene", RpcTarget.All, selectedMap);
     }
+
+    public void ChangeTeam(string _team)
+    {
+        Hashtable cp = PhotonNetwork.LocalPlayer.CustomProperties;
+        cp["Team"] = _team;
+        PhotonNetwork.LocalPlayer.SetCustomProperties(cp);
+
+    }
+
+    public void ExitRoom()
+    {
+        if (PhotonNetwork.LocalPlayer.IsMasterClient)
+        {
+            if (PhotonNetwork.PlayerList.Length > 1)
+                PhotonNetwork.SetMasterClient(PhotonNetwork.PlayerList[1]);
+        }
+        PhotonNetwork.LeaveRoom();
+        PhotonNetwork.LoadLevel("1_Lobby");
+    }
+
+    public void ReadyBtn()
+    {
+        Hashtable cp = PhotonNetwork.LocalPlayer.CustomProperties;
+        if (cp["Ready"].ToString() == "false")
+        {
+            cp["Ready"] = "true";
+        }
+        else
+        {
+            cp["Ready"] = "false";
+        }
+        PhotonNetwork.LocalPlayer.SetCustomProperties(cp);
+    }
+
+    public void ClosePopup()
+    {
+        ReadyPopUp.gameObject.SetActive(false);
+    }
+
+    private void CreatePlayer(Player newPlayer, GameObject playerPerhaps, Transform playerParent, List<Player> list)
+    {
+        DeletePlayer(newPlayer);
+        GameObject go = Instantiate(playerPerhaps, playerParent);
+        PrefabPlayer player = go.GetComponent<PrefabPlayer>();
+        string playername = newPlayer.NickName;
+        list.Add(newPlayer);
+        player.SetText(playername);
+
+        playerPrefabDic.Add(newPlayer, go);
+    }
+
+    private void DeletePlayer(Player newPlayer)//나중에 teamlist에서 삭제까지 추가할 것
+    {
+        if (playerPrefabDic.ContainsKey(newPlayer))
+        {
+            Destroy(playerPrefabDic[newPlayer]);
+            playerPrefabDic.Remove(newPlayer);
+        }
+    }
+    #endregion
 }
