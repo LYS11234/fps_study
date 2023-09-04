@@ -11,7 +11,6 @@ public class Database : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(transform.gameObject);
         }
         else
             Destroy(this);

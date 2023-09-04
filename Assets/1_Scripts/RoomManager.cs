@@ -46,7 +46,8 @@ public class RoomManager : MonoBehaviourPunCallbacks
     private PrefabMap prefabMapScript;
 
     [SerializeField]
-    private PrefabPlayer prefabPlayer;
+    private PrefabPlayer prefabPlayerTeam1;
+    [SerializeField] private PrefabPlayer prefabPlayerTeam2;
 
     [SerializeField]
     private string selectedMap;
@@ -174,15 +175,10 @@ public class RoomManager : MonoBehaviourPunCallbacks
         }
 
         string rd = changedProps["Ready"].ToString();
+        
+        
 
-        if (rd == "true") 
-        {
-            prefabPlayer.readyText.text = "Ready!";
-        }
-        else
-        {
-            prefabPlayer.readyText.text = "";
-        }
+        
     }
 
     //public void ChangeTeam2Red()

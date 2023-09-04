@@ -101,21 +101,12 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     {
         base.OnRoomListUpdate(roomList);
         Debug.Log("OnRoomListUpdate" + JsonConvert.SerializeObject(roomList));
-
-        //if (roomList.Find(e => e = prefabRoom.name))
-        //{
-
-        //}
         for (int i = 0; i < roomList.Count; i++)
         {
             GameObject go = Instantiate(roomPrefab, roomListParent);
             PrefabRoom room = go.GetComponent<PrefabRoom>();
-            
             room.SetRoomInfo(roomList[i]);
-            
         }
-        //Debug.Log("OnRoomListUpdate" + JsonConvert.SerializeObject(roomList));
-        //  List<RoomInfo> a = JsonConvert.DeserializeObject<List<RoomInfo>>("");
     }
 
     public override void OnJoinedLobby()

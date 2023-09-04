@@ -15,6 +15,16 @@ public class PrefabPlayer : MonoBehaviour
         playerNametext.text = _playername;
     }
 
-    
+    public void SetReady(string _isReady)
+    {
+        if(_isReady == "true")
+        {
+            readyText.text = "Ready!";
+        }
+        else
+        {
+            readyText.text = "";
+        }
+    }
     
 }
