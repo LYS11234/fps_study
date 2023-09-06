@@ -29,7 +29,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks
 
     private void Awake()
     {
-        PhotonNetwork.ConnectUsingSettings();
+        PhotonNetwork.ConnectUsingSettings();//서버에 연결
         //PhotonNetwork.automaticallySyncScene = true;
     }
 
@@ -37,14 +37,14 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     #region Base
     public void OnRoomCreate(string _roomTitle, string _roomPassword = "", int _maxPlayer = 20)
     {
-        RoomOptions roomOptions = new RoomOptions();
-        string Title = _roomTitle;
-        ExitGames.Client.Photon.Hashtable initialProps = new ExitGames.Client.Photon.Hashtable() { { "password", _roomPassword }, { "MapName", "3_Map1" } };
-        roomOptions.CustomRoomProperties = initialProps;
-        roomOptions.CustomRoomPropertiesForLobby = new string[] { "password", "MapName"};
-        roomOptions.MaxPlayers = _maxPlayer;
-        PhotonNetwork.CreateRoom(Title, roomOptions);
-        PhotonNetwork.LoadLevel("2_Room");
+        RoomOptions roomOptions = new RoomOptions();//RoomOption 생성
+        string Title = _roomTitle;//Title 저장
+        ExitGames.Client.Photon.Hashtable initialProps = new ExitGames.Client.Photon.Hashtable() { { "password", _roomPassword }, { "MapName", "3_Map1" } };//CustomProperties에 Password와 Map을 기본적으로 Map1으로 설정한 것 initialProps에 저장
+        roomOptions.CustomRoomProperties = initialProps;//CustomProperties를 option에 대입
+        roomOptions.CustomRoomPropertiesForLobby = new string[] { "password", "MapName"}; //로비에 표시할 룸 옵션도 저장
+        roomOptions.MaxPlayers = _maxPlayer;//최대 인원 설정
+        PhotonNetwork.CreateRoom(Title, roomOptions);// 저장한 Title과 roomOption으로 방 생성
+        PhotonNetwork.LoadLevel("2_Room");//방으로 입장
     }
     
     public void OnRoomJoin(string _roomTitle, string _InputPassword, string _Password)
@@ -86,15 +86,14 @@ public class LobbyManager : MonoBehaviourPunCallbacks
 
     public override void OnMasterClientSwitched(Player newMasterClient)
     {
-        base.OnMasterClientSwitched(newMasterClient);
+        base.OnMasterClientSwitched(newMasterClient);//MasterClient 변경 시 실행
         Debug.Log("newMasterClient : " + newMasterClient.NickName);
     }
     public override void OnCreatedRoom()
     {
-        base.OnCreatedRoom();
+        base.OnCreatedRoom();//방 생성 시에 실행
         //playerController.name = text.name;
         Debug.Log("OnCreatedRoom");
-        Debug.Log(PhotonNetwork.NickName);
     }
 
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
@@ -103,9 +102,21 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         Debug.Log("OnRoomListUpdate" + JsonConvert.SerializeObject(roomList));
         for (int i = 0; i < roomList.Count; i++)
         {
-            GameObject go = Instantiate(roomPrefab, roomListParent);
+            GameObject go = Instantiate(roomPrefab, roomListParent);//
             PrefabRoom room = go.GetComponent<PrefabRoom>();
             room.SetRoomInfo(roomList[i]);
+            for (int j = 0; j < i; j++) 
+            {
+                if (room.roomInfo.Name == roomList[j].Name && room.roomInfo.CustomProperties == roomList[j].CustomProperties)
+                {
+                    Destroy(go);
+                } 
+
+            }
+            if (room.roomInfo.PlayerCount == 0)
+            {
+                Destroy(go);
+            }
         }
     }
 

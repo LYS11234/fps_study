@@ -4,29 +4,39 @@ using UnityEngine;
 using Photon.Pun;
 using UnityEngine.UIElements;
 using Unity.VisualScripting;
+using System.IO;
 
 public class PlayerController : MonoBehaviourPun, IPunObservable
 {
     [Header("Photon")]
+
     [SerializeField]
     PhotonView view;
 
-
     [Space(20)]
+
     [Header("Scripts Or Objects")]
+
     [SerializeField]
     private Rigidbody myRigid;
 
     [SerializeField]
     CharacterController characterController;
-    public Camera cam;
-    public SkinnedMeshRenderer skinnedMeshRenderer;
+
+    public SkinnedMeshRenderer skinnedMeshRendererHead;
+    public SkinnedMeshRenderer skinnedMeshRendererLegs;
+    public SkinnedMeshRenderer skinnedMeshRendererTorso;
+
     public Transform myTransform;
 
+    public Transform cam;
+
     public Animator myAnim;
+
     [Space(20)]
 
     [Header("Variables")]
+
     public int applySpeed = 5;
 
     public float mouseSensivity = 5;
@@ -35,12 +45,12 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
     
     public float currentCameraRotationY;
 
-    
+    public float HP;
+
+    private bool canMove;
 
     Vector3 realPos;
     Quaternion realRot;
-
-   
 
     void Awake()
     {
@@ -48,27 +58,37 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         //view = GetComponent<PhotonView>();
         //myRigid = GetComponent<Rigidbody>();
         //characterController = GetComponent<CharacterController>();
-
-       //Material mats =  skinnedMeshRenderer.material;
-       // //mats[0] = ~ ;
-       // skinnedMeshRenderer.material = mats;
-        if (!view.IsMine)
-        {
-            Destroy(cam);
-        }
     }
 
     void Start()
     {
         myAnim.SetBool("onGround", true);
+        if(view.Owner.CustomProperties["Team"].ToString() == "1")
+        {
+            this.ChangeMaterial(MapManager.instance.aTeam.head, MapManager.instance.aTeam.legs, MapManager.instance.aTeam.torso);
+        }
+        if (view.Owner.CustomProperties["Team"].ToString() == "2")
+        {
+            this.ChangeMaterial(MapManager.instance.bTeam.head, MapManager.instance.bTeam.legs, MapManager.instance.bTeam.torso);
+        }
+        HP = 20;
     }
 
     private void Update()
     {
         if (view.IsMine)
         {
-             Move();
-            if(Input.GetKeyDown(KeyCode.Space))
+            if (canMove)
+            {
+                Move();
+                CameraRotate();
+                CharacterRotate();
+                Aim();
+                Reload();
+                Shoot();                
+            }
+            Dead();
+            if (Input.GetKeyDown(KeyCode.Space))
             {
                 view.RPC("Jump", RpcTarget.All, "abc", "def");
             }
@@ -88,14 +108,17 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         // 3. 내 회전값에 움직임만큼의 회전값을 더한다.
 
         // -10 ~ +10
-        CameraRotate();
-        CharacterRotate();
-        Aim();
-        Reload();
-        Shoot();
+
     }
 
     #region methodes
+    public void ChangeMaterial(Material teamHead, Material teamLegs, Material teamTorso)
+    {
+        skinnedMeshRendererHead.material = teamHead;
+        skinnedMeshRendererLegs.material = teamLegs;
+        skinnedMeshRendererTorso.material = teamTorso;
+    }
+
     private void Move()
     {
         float _moveDirX = Input.GetAxisRaw("Horizontal");
@@ -106,22 +129,22 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
                 IdleAnim();
             
         }
-            if (_moveDirZ > 0)
+        if (_moveDirZ > 0)
+        {
+            if(!myAnim.GetBool("Aiming"))
+                MoveAnim();
+            else
             {
-                if(!myAnim.GetBool("Aiming"))
-                    MoveAnim();
-                else
-                {
-                    myAnim.SetFloat("Y", 1);
-                }
-                
+                myAnim.SetFloat("Y", 1);
             }
+                
+        }
 
-            if (_moveDirZ < 0)
-            {
-                myAnim.SetFloat("Y", -1);
+        if (_moveDirZ < 0)
+        {
+            myAnim.SetFloat("Y", -1);
                 
-            }
+        }
         if (_moveDirX > 0)
             myAnim.SetFloat("X", 1);
         if (_moveDirX < 0)
@@ -149,7 +172,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         float mouseX = -Input.GetAxis("Mouse Y");
         currentCameraRotationX += mouseX * mouseSensivity;
         currentCameraRotationX = Mathf.Clamp(currentCameraRotationX, -45, 45);
-        cam.transform.localEulerAngles = new Vector3(currentCameraRotationX, 0f, 0f);
+        cam.localEulerAngles = new Vector3(currentCameraRotationX, 0f, 0f);
 
     }
 
@@ -169,11 +192,21 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         {
             stream.SendNext(myTransform.position);
             stream.SendNext(myTransform.rotation);
+            stream.SendNext(myAnim.GetFloat("X"));
+            stream.SendNext(myAnim.GetFloat("Y"));
+            stream.SendNext(myAnim.GetFloat("Speed"));
+            stream.SendNext(myAnim.GetBool("Aiming"));
+            stream.SendNext(this.HP);
         } 
         else
         {
             realPos = (Vector3)stream.ReceiveNext();
             realRot = (Quaternion)stream.ReceiveNext();
+            myAnim.SetFloat("X", (float)stream.ReceiveNext());
+            myAnim.SetFloat("Y", (float)stream.ReceiveNext());
+            myAnim.SetFloat("Speed", (float)stream.ReceiveNext());
+            myAnim.SetBool("Aiming", (bool)stream.ReceiveNext());
+            HP =  (float)stream.ReceiveNext();
         }
     }
 
@@ -240,10 +273,22 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
             myAnim.SetTrigger("Shoot");
             
         }
-        //else
-        //{
-        //    myAnim.ResetTrigger("Shoot");
-        //}
+    }
+
+    private void Dead()
+    {
+        if (HP <= 0)
+        {
+            myAnim.SetBool("Dead", true);
+            canMove = false;
+
+        }
+
+        else
+        { 
+            myAnim.SetBool("Dead", false);
+            canMove= true;
+        }
     }
     #endregion
 

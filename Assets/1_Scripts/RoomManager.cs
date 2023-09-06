@@ -19,46 +19,50 @@ public class RoomManager : MonoBehaviourPunCallbacks
 {
 
     #region ∏  µ•¿Ã≈Õ
+    [Header("Map Data")]
     [SerializeField] private List<MapData> mapDatas; // 2∞≥
 
     public GameObject mapPrefab;
     public Transform mapPrefabParent;
     #endregion
-
-    public GameObject playerPerhaps_1;
-    public GameObject playerPerhaps_2;
-    public Transform playerListParent_1;
-    public Transform playerListParent_2;
-
+    [Space(20)]
+    #region Photon view
+    [Header("Photon View")]
     [SerializeField]
     PhotonView view;
-
+    #endregion
+    [Space(20)]
+    #region Objects & Scripts
+    [Header("Objects & Scripts")]
+    public GameObject playerPerfaps_1;
+    public GameObject playerPerfaps_2;
+    public Transform playerListParent_1;
+    public Transform playerListParent_2;
     [SerializeField]
     private Image selectedMapImage;
-
     [SerializeField]
     private GameObject ReadyPopUp;
-
     [SerializeField]
     private GameObject mapLists;
-
     [SerializeField]
     private PrefabMap prefabMapScript;
-
     [SerializeField]
     private PrefabPlayer prefabPlayerTeam1;
     [SerializeField] private PrefabPlayer prefabPlayerTeam2;
-
+    Dictionary<Player, GameObject> playerPrefabDic = new Dictionary<Player, GameObject>();
+    public GameObject startBtnObj;
+    public GameObject readyBtnObj;
+    public Button mapSelectBtn;
+    #endregion
+    [Space(20)]
+    #region Variables
+    [Header("Variables")]
     [SerializeField]
     private string selectedMap;
     private List<Player> team1List = new List<Player>();
     private List<Player> team2List = new List<Player>();
 
-    Dictionary<Player, GameObject> playerPrefabDic = new Dictionary<Player, GameObject>();
-
-    public GameObject startBtnObj;
-    public GameObject readyBtnObj;
-    public Button mapSelectBtn;
+    #endregion
 
 
     private void Awake()
@@ -127,7 +131,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
                 {
                     team1List.Remove(targetPlayer);
                     team2List.Add(targetPlayer);
-                    CreatePlayer(targetPlayer, playerPerhaps_2, playerListParent_2, team2List);
+                    CreatePlayer(targetPlayer, playerPerfaps_2, playerListParent_2, team2List);
                 }
                 
             }
@@ -146,7 +150,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
                     {
                         team2List.Remove(targetPlayer);
                         team1List.Add(targetPlayer);
-                        CreatePlayer(targetPlayer, playerPerhaps_1, playerListParent_1, team1List);
+                        CreatePlayer(targetPlayer, playerPerfaps_1, playerListParent_1, team1List);
                         
                     }
                 }
@@ -161,7 +165,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
                 if(team2List.Contains(targetPlayer))
                     team2List.Remove(targetPlayer);
                 team1List.Add(targetPlayer);
-                CreatePlayer(targetPlayer, playerPerhaps_1, playerListParent_1, team1List);
+                CreatePlayer(targetPlayer, playerPerfaps_1, playerListParent_1, team1List);
 
             }
             else if (tm == "2")
@@ -169,7 +173,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
                 if(team1List.Contains(targetPlayer))
                     team1List.Remove(targetPlayer);
                 team2List.Add(targetPlayer);
-                CreatePlayer(targetPlayer, playerPerhaps_2, playerListParent_2, team2List);
+                CreatePlayer(targetPlayer, playerPerfaps_2, playerListParent_2, team2List);
 
             }
         }
@@ -265,11 +269,11 @@ public class RoomManager : MonoBehaviourPunCallbacks
                     if (initialProps["Team"].ToString() == "1")
                     {
 
-                        CreatePlayer(PhotonNetwork.PlayerListOthers[i], playerPerhaps_1, playerListParent_1, team1List);
+                        CreatePlayer(PhotonNetwork.PlayerListOthers[i], playerPerfaps_1, playerListParent_1, team1List);
                     }
                     else if (initialProps["Team"].ToString() == "2")
                     {
-                        CreatePlayer(PhotonNetwork.PlayerListOthers[i], playerPerhaps_2, playerListParent_2, team2List);
+                        CreatePlayer(PhotonNetwork.PlayerListOthers[i], playerPerfaps_2, playerListParent_2, team2List);
                     }
                 }
             }
@@ -282,7 +286,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
             initialProps.TryAdd("Team", "1");
             initialProps.TryAdd("Ready", "false");
             PhotonNetwork.LocalPlayer.SetCustomProperties(initialProps);
-            CreatePlayer(PhotonNetwork.LocalPlayer, playerPerhaps_1, playerListParent_1, team1List);
+            CreatePlayer(PhotonNetwork.LocalPlayer, playerPerfaps_1, playerListParent_1, team1List);
         }
         else
         {
@@ -290,7 +294,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
             initialProps.TryAdd("Team", "2");
             initialProps.TryAdd("Ready", "false");
             PhotonNetwork.LocalPlayer.SetCustomProperties(initialProps);
-            CreatePlayer(PhotonNetwork.LocalPlayer, playerPerhaps_2, playerListParent_2, team2List);
+            CreatePlayer(PhotonNetwork.LocalPlayer, playerPerfaps_2, playerListParent_2, team2List);
         }
     }
 
