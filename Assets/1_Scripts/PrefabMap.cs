@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class PrefabMap : MonoBehaviour
 {
-    public string name;
+    public string Name;
     public Sprite Image;
 
     public Image image;

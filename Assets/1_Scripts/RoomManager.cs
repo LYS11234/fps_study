@@ -68,7 +68,26 @@ public class RoomManager : MonoBehaviourPunCallbacks
     private void Awake()
     {
         CreateMapList();
+
         view = GetComponent<PhotonView>();
+    }
+
+    private void Start()
+    {
+        if (PhotonNetwork.CurrentRoom == null) return;
+        ExitGames.Client.Photon.Hashtable cp2 = PhotonNetwork.CurrentRoom.CustomProperties;
+        if (cp2["isPlayed"].ToString() == "true")
+        { 
+            CreatePlayerList();
+            ShowMapPre();
+            if (!PhotonNetwork.IsMasterClient)
+            {
+                mapSelectBtn.interactable = false;
+                startBtnObj.SetActive(false);
+                readyBtnObj.SetActive(true);
+            }
+        }
+
     }
 
     private void CreateMapList()
@@ -80,7 +99,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
             GameObject go = Instantiate(mapPrefab, mapPrefabParent);
             PrefabMap Map = go.GetComponent<PrefabMap>();
             Map.Image = mapDatas[i].img;
-            Map.name = mapDatas[i].mapName;
+            Map.Name = mapDatas[i].mapName;
         }
     }
 
@@ -110,6 +129,8 @@ public class RoomManager : MonoBehaviourPunCallbacks
         
         Debug.Log("OnCreatedRoom");
         Debug.Log(PhotonNetwork.NickName);
+        PhotonNetwork.CurrentRoom.CustomProperties.Add("Team1 Score", "0");
+        PhotonNetwork.CurrentRoom.CustomProperties.Add("Team2 Score", "0");
     }
 
     
@@ -180,9 +201,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
         string rd = changedProps["Ready"].ToString();
         
-        
-
-        
     }
 
     //public void ChangeTeam2Red()
@@ -221,6 +239,12 @@ public class RoomManager : MonoBehaviourPunCallbacks
             mapSelectBtn.interactable = false;
             startBtnObj.SetActive(false);
             readyBtnObj.SetActive(true);
+        }
+        ExitGames.Client.Photon.Hashtable cp = PhotonNetwork.CurrentRoom.CustomProperties;
+        if (cp["isPlayed"] == null)
+        {
+            cp.Add("isPlayed", "false");
+            PhotonNetwork.CurrentRoom.SetCustomProperties(cp);
         }
 
         //PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity);
@@ -307,7 +331,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     public void SelectMap(PrefabMap prefabmap)
     {
-        selectedMap = prefabmap.name;
+        selectedMap = prefabmap.Name;
         selectedMapImage.sprite = prefabmap.Image;
         mapLists.gameObject.SetActive(false);
         Hashtable cp = PhotonNetwork.CurrentRoom.CustomProperties;

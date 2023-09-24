@@ -43,6 +43,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         roomOptions.CustomRoomProperties = initialProps;//CustomProperties를 option에 대입
         roomOptions.CustomRoomPropertiesForLobby = new string[] { "password", "MapName"}; //로비에 표시할 룸 옵션도 저장
         roomOptions.MaxPlayers = _maxPlayer;//최대 인원 설정
+        
         PhotonNetwork.CreateRoom(Title, roomOptions);// 저장한 Title과 roomOption으로 방 생성
         PhotonNetwork.LoadLevel("2_Room");//방으로 입장
     }
